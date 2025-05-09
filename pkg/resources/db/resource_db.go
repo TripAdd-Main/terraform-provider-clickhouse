@@ -3,7 +3,6 @@ package resourcedb
 import (
 	"context"
 	"fmt"
-	resourcetable "github.com/IvanOfThings/terraform-provider-clickhouse/pkg/resources/table"
 
 	"github.com/IvanOfThings/terraform-provider-clickhouse/pkg/common"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -202,26 +201,6 @@ func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return diags
 	}
 
-	chTableService := resourcetable.CHTableService{CHConnection: conn}
-	chDBService := CHDBService{CHConnection: conn, CHTableService: &chTableService}
-	dbResources, err := chDBService.GetDBResources(ctx, databaseName)
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("resource db delete: %v", err))
-	}
-	if len(dbResources.CHTables) > 0 {
-		var tableNames []string
-		for _, table := range dbResources.CHTables {
-			tableNames = append(tableNames, table.Name)
-		}
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Unable to delete db resource %q", databaseName),
-			Detail:   fmt.Sprintf("DB resource is used by another resources and is not possible to delete it. Tables: %v.", tableNames),
-		})
-		return diags
-	}
-
 	cluster, _ := d.Get("cluster").(string)
 	if cluster == "" {
 		cluster = client.DefaultCluster
@@ -230,7 +209,7 @@ func resourceDbDelete(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	query := fmt.Sprintf("DROP DATABASE %v %v SYNC", databaseName, clusterStatement)
 
-	err = (*conn).Exec(ctx, query)
+	err := (*conn).Exec(ctx, query)
 	if err != nil {
 		return diag.FromErr(err)
 	}

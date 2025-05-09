@@ -193,3 +193,12 @@ _Note:_ Acceptance tests create real resources, and often cost money to run.
 ```sh
 $ make testacc
 ```
+
+## Publishing the Provider
+
+- To publish the provider form scratch, follow [these](https://developer.hashicorp.com/terraform/tutorials/providers-plugin-framework/providers-plugin-framework-release-publish)
+- To publish new version of existing provider, make needed changes in master and run (change tag version with format like `v0.2.1`):
+```
+git tag <tag-version>
+git push origin <tag-version>
+```
